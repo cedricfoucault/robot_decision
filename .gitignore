@@ -1,0 +1,18 @@
+# Temp compiled source #
+
+*.o
+*.d
+
+# HTML, XML
+
+*.xml
+*.html
+
+# Os generated files #
+
+Thumbs.db
+ehthumbs.db
+.DS_Store?
+Icon?
+
+build
