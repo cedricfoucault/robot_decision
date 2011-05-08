@@ -1,5 +1,5 @@
-# Temp compiled source #
-
+# Compiled source #
+*.exe
 *.o
 *.d
 

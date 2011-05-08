@@ -33,6 +33,7 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/_ext/282113793/jeu.o \
 	${OBJECTDIR}/main.o
 
 
@@ -59,6 +60,11 @@ LDLIBSOPTIONS=
 dist/Release/MinGW-Windows/robot_decision.exe: ${OBJECTFILES}
 	${MKDIR} -p dist/Release/MinGW-Windows
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/robot_decision ${OBJECTFILES} ${LDLIBSOPTIONS} 
+
+${OBJECTDIR}/_ext/282113793/jeu.o: /H/Programming/C_C++/Netbeans/robot_decision/jeu.c 
+	${MKDIR} -p ${OBJECTDIR}/_ext/282113793
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/282113793/jeu.o /H/Programming/C_C++/Netbeans/robot_decision/jeu.c
 
 ${OBJECTDIR}/main.o: main.c 
 	${MKDIR} -p ${OBJECTDIR}
