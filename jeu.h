@@ -11,13 +11,20 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <assert.h>
 #include <math.h>
-    
-    typedef enum {
-        FALSE, TRUE
-    } boolean;
 
+    // /!\ CONSTANTES A DEFINIR EN FONCTIONS DES CAPACITES DU ROBOT
+#define VITESSE_MOY (0.5)   /* Vitesse moyenne de déplacement du robot
+                             * (VITESSE_MOY = 1 <=> 1 longueur de case / seconde) */
+#define TEMPS_SUP (5) /* Temps supplémentaire moyen (en secondes)
+                       * qu'il faut au robot pour assembler une tour,
+                       * en plus du temps de déplacement :
+                       * pour pincer et soulever la tour, la reposer, se tourner... */
 
     // Pos : Type pour représenter une position sur le damier
 
@@ -32,8 +39,8 @@ extern "C" {
     void Pos_setX(Pos *pos, float x);
     void Pos_setY(Pos *pos, float y);
 
-     boolean Pos_egal(Pos *pos1, Pos *pos2);
-     float Pos_distance(Pos *pos1, Pos *pos2);
+    bool Pos_egal(Pos pos1, Pos pos2);
+    float Pos_distance(Pos pos1, Pos pos2);
 
     // Etat : Type pour représenter un état du plateau à un instant donné du jeu
 
@@ -44,7 +51,7 @@ extern "C" {
         unsigned char nbFigures; // idem
         unsigned short points;
         Pos robotAmi; // position estimée de notre robot
-        Pos robotEnnemi; // position estimée du robot adverse : paramètre optionnel ?
+        //Pos robotEnnemi; // position estimée du robot adverse : paramètre optionnel ?
         Pos pions[15]; // position des nbPions pions
         Pos figures[4]; // idem
         float temps; // temps écoulé
@@ -53,7 +60,6 @@ extern "C" {
     unsigned char Etat_getNbPions(Etat *plateau);
     unsigned char Etat_getNbFigures(Etat *plateau);
     Pos Etat_getRobotAmi(Etat *plateau);
-    Pos Etat_getRobotEnnemi(Etat *plateau);
     Pos *Etat_getPions(Etat *plateau);
     Pos *Etat_getFigures(Etat *plateau);
     float Etat_getTemps(Etat *plateau);
@@ -61,7 +67,6 @@ extern "C" {
     void Etat_setNbPions(Etat *plateau, unsigned char nbPions);
     void Etat_setNbFigures(Etat *plateau, unsigned char nbFigures);
     void Etat_setRobotAmi(Etat *plateau, Pos robotAmi);
-    void Etat_setRobotEnnemi(Etat *plateau, Pos robotEnnemi);
     void Etat_setPions(Etat *plateau, Pos pions[]);
     void Etat_setFigures(Etat *plateau, Pos figures[]);
     void Etat_setTemps(Etat *plateau, float temps);
@@ -69,12 +74,16 @@ extern "C" {
     Etat *Etat_copyEtat(Etat *plateau);
     //Pos *Etat_copyPions(Etat *plateau);
     //Pos *Etat_copyFigures(Etat *plateau);
-    boolean Etat_bougerPion(Etat *plateau, Pos pion, Pos dest);
-    boolean Etat_bougerFigure(Etat *plateau, Pos figure, Pos dest);
-    boolean Etat_detruirePion(Etat *plateau, Pos pion); /* Détruit un pion du damier
+    Etat Etat_init();
+    void Etat_ajouterPion(Etat *plateau, Pos pion);
+    void Etat_ajouterFigure(Etat *plateau, Pos figure);
+    bool Etat_bougerPion(Etat *plateau, Pos pion, Pos dest);
+    bool Etat_bougerFigure(Etat *plateau, Pos figure, Pos dest);
+    bool Etat_detruirePion(Etat *plateau, Pos pion); /* Détruit un pion du damier
                                                          * retourne FALSE si aucun
                                                          * pion n'a été détruit */
-    boolean Etat_detruireFigure(Etat *plateau, Pos figure); /* idem */
+    bool Etat_detruireFigure(Etat *plateau, Pos figure); /* idem */
+    float Etat_heuristique(Etat *plateau); /* Détermine l'heuristique actuelle du plateau de jeu */
 
 
     // Coup : type pour représenter un coup à jouer
@@ -95,7 +104,7 @@ extern "C" {
     void CoupPion_setDest(CoupPion *coup, Pos dest);
     void CoupPion_setRobot(CoupPion *coup, Pos robot);
 
-    typedef struct {
+    typedef struct Tour_ {
         Pos figure;
         Pos pion1;
         Pos pion2;
@@ -150,17 +159,17 @@ extern "C" {
 
     // Fonctions pour interagir avec le plateau
 
-    Coup deciderCoup(Etat *plateau);
-    Coup coupsPossibles(Etat *plateau);
-    boolean jouerCoup(Etat *plateau, Coup *coup);
-    boolean coupValide(Etat *plateau, Coup *coup);
+    Coup deciderCoup(Etat *plateau, float dureeLimitee);
+    Coup *coupsPossibles(Etat *plateau, int *nbCoups);
+    bool jouerCoup(Etat *plateau, Coup *coup);
+    bool jouerCoupPion(Etat *plateau, CoupPion *coup);
+    bool jouerCoupTour(Etat *plateau, CoupTour *coup);
+    bool coupValide(Etat *plateau, Coup *coup);
     float estimerTemps(Etat *plateau, Coup *coup); /* retourne une estimée
                                                     * du temps nécessaire
                                                     * pour jouer coup */
     float estimerTempsPion(Etat *plateau, CoupPion *coup);
     float estimerTempsTour(Etat *plateau, CoupTour *coup);
-    float heuristique(Etat *plateau); /* Détermine l'heuristique
-                                                   * associée à un coup */
     Tour deciderTour(Etat *plateau); /* détermine la manière optimale
                                       * d'assembler une tour
                                       * pour un état donné du plateau */

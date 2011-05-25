@@ -21,16 +21,17 @@ void Pos_setY(Pos *pos, float y) {
     pos->y = y;
 }
 
-float Pos_distance(Pos *pos1, Pos *pos2) {
-    float x1 = pos1->x, y1 = pos1->y, x2 = pos2->x, y2 = pos2->y;
+float Pos_distance(Pos pos1, Pos pos2) {
+    float x1 = pos1.x, y1 = pos1.y, x2 = pos2.x, y2 = pos2.y;
     return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
-boolean Pos_egal(Pos *pos1, Pos *pos2) {
-    if ((pos1->x == pos2->x) && (pos1->y == pos2->y)) {
-        return TRUE;
+bool Pos_egal(Pos pos1, Pos pos2) { // "Environ égal" (+ ou - 0.4 près, 0.5 étant la demi-largeur d'1 case)
+    //if ((pos1.x - 0.4 < pos2.x && pos2.x < pos1.x + 0.4) && (pos1.y - 0.4 < pos2.y && pos2.y < pos1.y + 0.4)) {
+    if (pos1.x == pos2.x && pos1.y == pos2.y) {
+        return true;
     } else {
-        return FALSE;
+        return false;
     }
 }
 
@@ -79,10 +80,6 @@ Pos Etat_getRobotAmi(Etat *plateau) {
     return plateau->robotAmi;
 }
 
-Pos Etat_getRobotEnnemi(Etat *plateau) {
-    return plateau->robotEnnemi;
-}
-
 Pos *Etat_getPions(Etat *plateau) {
     return plateau->pions;
 }
@@ -109,10 +106,6 @@ void Etat_setRobotAmi(Etat *plateau, Pos robotAmi) {
     plateau->robotAmi = robotAmi;
 }
 
-void Etat_setRobotEnnemi(Etat *plateau, Pos robotEnnemi) {
-    plateau->robotEnnemi = robotEnnemi;
-}
-
 void Etat_setPions(Etat *plateau, Pos pions[]) {
     int i;
     for (i = 0; i < plateau->nbPions; i++) {
@@ -134,7 +127,8 @@ void Etat_setTemps(Etat *plateau, float temps) {
 // Copies
 
 Etat *Etat_copyEtat(Etat *plateau) {
-    Etat *plateauCopy = (Etat *) malloc(sizeof (Etat));
+    Etat *plateauCopy;
+    plateauCopy = (Etat*) malloc(sizeof(Etat));
     int nbPions = plateau->nbPions, nbFigures = plateau->nbFigures, i;
     plateauCopy->nbPions = nbPions;
     plateauCopy->nbFigures = nbFigures;
@@ -148,14 +142,32 @@ Etat *Etat_copyEtat(Etat *plateau) {
     return plateauCopy;
 }
 
-boolean Etat_bougerPion(Etat *plateau, Pos pion, Pos dest) {
-    boolean trouve = FALSE;
+
+Etat Etat_init() {
+    Etat plateauInit;
+    plateauInit.temps = 0.;
+    plateauInit.nbFigures = 0;
+    plateauInit.nbPions = 0;
+    plateauInit.points = 0.;
+    return plateauInit;
+}
+void Etat_ajouterPion(Etat *plateau, Pos pion) {
+    plateau->pions[plateau->nbPions] = pion;
+    (plateau->nbPions)++;
+}
+void Etat_ajouterFigure(Etat *plateau, Pos figure) {
+    plateau->figures[plateau->nbFigures] = figure;
+    (plateau->nbFigures)++;
+}
+
+bool Etat_bougerPion(Etat *plateau, Pos pion, Pos dest) {
+    bool trouve = false;
     int nbPions = plateau->nbPions, i;
 
     for (i = 0; i < nbPions; i++) {
-        if (Pos_egal((plateau->pions[i]), pion) == TRUE) {
+        if (Pos_egal((plateau->pions[i]), pion) == true) {
             plateau->pions[i] = dest;
-            trouve = TRUE;
+            trouve = true;
             break;
         }
     }
@@ -163,14 +175,14 @@ boolean Etat_bougerPion(Etat *plateau, Pos pion, Pos dest) {
     return trouve;
 }
 
-boolean Etat_bougerFigure(Etat *plateau, Pos figure, Pos dest) {
-    boolean trouve = FALSE;
+bool Etat_bougerFigure(Etat *plateau, Pos figure, Pos dest) {
+    bool trouve = false;
     int nbFigures = plateau->nbFigures, i;
 
     for (i = 0; i < nbFigures; i++) {
-        if (Pos_egal((plateau->figures[i]), figure) == TRUE) {
+        if (Pos_egal((plateau->figures[i]), figure) == true) {
             plateau->figures[i] = dest;
-            trouve = TRUE;
+            trouve = true;
             break;
         }
     }
@@ -178,14 +190,14 @@ boolean Etat_bougerFigure(Etat *plateau, Pos figure, Pos dest) {
     return trouve;
 }
 
-boolean Etat_detruirePion(Etat *plateau, Pos pion) {
-    boolean trouve = FALSE;
+bool Etat_detruirePion(Etat *plateau, Pos pion) {
+    bool trouve = false;
     int nbPions = plateau->nbPions, i, numPion;
     // trouver le pion à détruire
     for (i = 0; i < nbPions; i++) {
-        if (Pos_egal((plateau->pions[i]), pion) == TRUE) {
+        if (Pos_egal((plateau->pions[i]), pion) == true) {
             numPion = i;
-            trouve = TRUE;
+            trouve = true;
             plateau->nbPions--;
             break;
         }
@@ -198,20 +210,20 @@ boolean Etat_detruirePion(Etat *plateau, Pos pion) {
     return trouve;
 }
 
-boolean Etat_detruireFigure(Etat *plateau, Pos figure) {
-    boolean trouve = FALSE;
+bool Etat_detruireFigure(Etat *plateau, Pos figure) {
+    bool trouve = false;
     int nbFigures = plateau->nbFigures, i, numFigure;
     // trouver la figure à détruire
     for (i = 0; i < nbFigures; i++) {
-        if (Pos_egal((plateau->figures[i]), figure) == TRUE) {
+        if (Pos_egal((plateau->figures[i]), figure) == true) {
             numFigure = i;
-            trouve = TRUE;
-            plateau->figures--;
+            trouve = true;
+            plateau->nbFigures--;
             break;
         }
     }
     // remettre les figures suivantes aux bons rangs
-    for (i = numFigure + 1; i < nbPions; i++) {
+    for (i = numFigure + 1; i < plateau->nbPions; i++) {
         plateau->figures[i - 1] = plateau->figures[i];
     }
 
@@ -325,7 +337,7 @@ void CoupTour_setDest(CoupPion *coup, Pos dest) {
 }
 
 void CoupTour_setRobot(CoupTour *coup, Pos robot) {
-    coup->tour = robot;
+    coup->robot = robot;
 }
 
 Pos calculerRobot(Pos pion, Pos dest) {
@@ -401,66 +413,227 @@ void Coup_setTCoup(Coup *coup, TCoup tCoup) {
 
 // ## Fonctions pour interagir avec le plateau
 
-Coup deciderCoup(Etat *plateau) {
+float deciderCoupRec(Etat *plateau, float tempsLimite);
 
+// deciderCoup :Décide d'un coup à jouer en fonction de l'Etat du plateau
+// et de la profondeur limite déterminée par "dureeLimite"
+// (analyse tous les coups possibles tant qu'ils prennent un temps total
+//  inférieur à dureeLimite)
+Coup deciderCoup(Etat *plateau, float dureeLimite) {
+    int nbCoups, i, numCoupAJouer;
+    float heuristique, heuristiqueMax, tempsLimite = dureeLimite + plateau->temps;
+    Coup coupAJouer;
+    Coup *coupsListe = coupsPossibles(plateau, &nbCoups);
+
+    Etat plateauCopie = (*plateau);
+    assert(jouerCoup(&plateauCopie, &(coupsListe[0])) == true);
+    heuristiqueMax = deciderCoupRec(&plateauCopie, tempsLimite);
+    numCoupAJouer = 0;
+    for (i = 0; i < nbCoups; i++) {
+        plateauCopie = (*plateau);
+        assert(jouerCoup(&plateauCopie, &(coupsListe[i])) == true);
+        heuristique = deciderCoupRec(&plateauCopie, tempsLimite);
+        if (heuristique > heuristiqueMax) {
+            numCoupAJouer = i;
+            heuristiqueMax = heuristique;
+        }
+    }
+    coupAJouer = coupsListe[numCoupAJouer];
+    free(coupsListe);
+    return (coupAJouer);
 }
 
-Coup coupsPossibles(Etat *plateau) {
 
+// Appel récursif initié par deciderCoup
+float deciderCoupRec(Etat *plateau, float tempsLimite) { // tempsLimite = temps initial + dureeLimite
+    if (plateau->temps >= tempsLimite || plateau->nbPions==0) {
+        return (Etat_heuristique(plateau));
+    }
+
+    int nbCoups, i;
+    float heuristique, heuristiqueMax;
+    Coup *coupsListe = coupsPossibles(plateau, &nbCoups);
+
+    Etat plateauCopie = (*plateau);
+    assert(jouerCoup(&plateauCopie, &(coupsListe[0])) == true);
+    heuristiqueMax = deciderCoupRec(&plateauCopie, tempsLimite);
+    for (i = 1; i < nbCoups; i++) {
+        plateauCopie = (*plateau);
+        assert(jouerCoup(&plateauCopie, &(coupsListe[i])) == true);
+        heuristique = deciderCoupRec(&plateauCopie, tempsLimite);
+        if (heuristique > heuristiqueMax) {
+            heuristiqueMax = heuristique;
+        }
+    }
+
+    free(coupsListe);
+    return heuristiqueMax;
 }
 
-boolean jouerCoup(Etat *plateau, Coup *coup) {
-    boolean valide;
+bool Pos_estDansCaseEnnemie(Pos pion) {
+    // Case ennemie  : x et y ont la même parité
+    return (bool)(((int)(pion.x + 0.5) % 2) == ((int)(pion.y + 0.5) % 2));
+}
+
+Coup *coupsPossibles(Etat *plateau, int *nbCoups) {
+    // Coups evalués : assembler une tour et la pousser dans une des 4 directions
+    // ou pousser un pion d'une case dans une des quatres directions
+    int i, nbPions = plateau->nbPions, nbCoupsMax = 4 * 16;
+    Coup *coupsPossibles = (Coup *) malloc(sizeof (Coup) * nbCoupsMax);
+    Coup coupAjoute;
+    Tour tour;
+
+    *nbCoups = 0;
+
+    // Coups Pions
+    coupAjoute.tCoup = PION;
+    for (i = 0; i < nbPions; i++) {
+        if (Pos_estDansCaseEnnemie(plateau->pions[i]) == true) {
+            coupAjoute.uCoup.coupPion.robot = plateau->robotAmi;
+            coupAjoute.uCoup.coupPion.pion = plateau->pions[i];
+
+            // Pousser à gauche
+            if ((plateau->pions[i]).x >= 0.5) { // le pion ne doit pas être au bord gauche
+                coupAjoute.uCoup.coupPion.dest = plateau->pions[i];
+                coupAjoute.uCoup.coupPion.dest.x = (float) floor(coupAjoute.uCoup.coupPion.dest.x + 0.5) - 1.;
+                coupsPossibles[*nbCoups] = coupAjoute;
+                (*nbCoups)++;
+            }
+
+            // Pousser à droite
+            if ((plateau->pions[i]).x < 4.5) { // le pion ne doit pas être au bord droit
+                coupAjoute.uCoup.coupPion.dest = plateau->pions[i];
+                coupAjoute.uCoup.coupPion.dest.x = (float) floor(coupAjoute.uCoup.coupPion.dest.x + 0.5) + 1.;
+                coupsPossibles[*nbCoups] = coupAjoute;
+                (*nbCoups)++;
+            }
+
+            // Pousser en haut
+            if ((plateau->pions[i]).y >= 0.5) { // le pion ne doit pas être au bord haut
+                coupAjoute.uCoup.coupPion.dest = plateau->pions[i];
+                coupAjoute.uCoup.coupPion.dest.y = (float) floor(coupAjoute.uCoup.coupPion.dest.y + 0.5) - 1.;
+                coupsPossibles[*nbCoups] = coupAjoute;
+                (*nbCoups)++;
+            }
+
+            // Pousser en bas
+            if ((plateau->pions[i]).y < 4.5) { // le pion ne doit pas être au bord bas
+                coupAjoute.uCoup.coupPion.dest = plateau->pions[i];
+                coupAjoute.uCoup.coupPion.dest.y += (float) floor(coupAjoute.uCoup.coupPion.dest.y + 0.5) + 1.;
+                coupsPossibles[*nbCoups] = coupAjoute;
+                (*nbCoups)++;
+            }
+        }
+    }
+
+    // Coups Tour
+    tour = deciderTour(plateau);
+    if (tour.figure.x != -1) {
+        coupAjoute.tCoup = TOUR;
+        coupAjoute.uCoup.coupTour.robot = plateau->robotAmi;
+        coupAjoute.uCoup.coupTour.tour = tour;
+        if (Pos_estDansCaseEnnemie(tour.pion2) == true) { // On doit pousser la tour
+            // Pousser à gauche
+            if (tour.pion2.x >= 0.5) { // le pion ne doit pas être au bord gauche
+                coupAjoute.uCoup.coupTour.dest = tour.pion2;
+                coupAjoute.uCoup.coupTour.dest.x = (float) floor(coupAjoute.uCoup.coupTour.dest.x + 0.5) - 1.;
+                coupsPossibles[*nbCoups] = coupAjoute;
+                (*nbCoups)++;
+            }
+
+            // Pousser à droite
+            if (tour.pion2.x < 4.5) { // le pion ne doit pas être au bord droit
+                coupAjoute.uCoup.coupTour.dest = tour.pion2;
+                coupAjoute.uCoup.coupTour.dest.x = (float) floor(coupAjoute.uCoup.coupTour.dest.x + 0.5) + 1.;
+                coupsPossibles[*nbCoups] = coupAjoute;
+                (*nbCoups)++;
+            }
+
+            // Pousser en haut
+            if (tour.pion2.y >= 0.5) { // le pion ne doit pas être au bord haut
+                coupAjoute.uCoup.coupTour.dest = tour.pion2;
+                coupAjoute.uCoup.coupTour.dest.y = (float) floor(coupAjoute.uCoup.coupTour.dest.y + 0.5) - 1.;
+                coupsPossibles[*nbCoups] = coupAjoute;
+                (*nbCoups)++;
+            }
+
+            // Pousser en bas
+            if (tour.pion2.y < 4.5) { // le pion ne doit pas être au bord bas
+                coupAjoute.uCoup.coupTour.dest = tour.pion2;
+                coupAjoute.uCoup.coupTour.dest.y += (float) floor(coupAjoute.uCoup.coupTour.dest.y + 0.5) + 1.;
+                coupsPossibles[*nbCoups] = coupAjoute;
+                (*nbCoups)++;
+            }
+        } else { // La tour est bien là où elle est (case amie)
+            coupAjoute.uCoup.coupTour.dest = tour.pion2;
+            coupsPossibles[*nbCoups] = coupAjoute;
+            (*nbCoups)++;
+        }
+    }
+    return coupsPossibles;
+}
+
+bool jouerCoup(Etat *plateau, Coup *coup) {
+    bool valide;
     if (coup->tCoup == PION) {
-        valide = jouerCoupPion(plateau, coup->uCoup->coupPion);
+        CoupPion *coupPion = &(coup->uCoup.coupPion);
+        valide = jouerCoupPion(plateau, coupPion);
     } else { // TOUR
-        valide = jouerCoupTour(plateau, coup->uCoup->coupTour);
+        CoupTour *coupTour = &(coup->uCoup.coupTour);
+        valide = jouerCoupTour(plateau, coupTour);
     }
     return valide;
 }
 
-boolean jouerCoupPion(Etat *plateau, CoupPion *coup) {
+bool jouerCoupPion(Etat *plateau, CoupPion *coup) {
     Pos pion = coup->pion, dest = coup->dest;
-    if (Etat_bougerPion(plateau, pion, dest) == FALSE) {
-        return FALSE;
+    if (Etat_bougerPion(plateau, pion, dest) == false) {
+        printf("FALSEPION\n");
+        return false;
     }
     plateau->robotAmi = calculerRobot(pion, dest);
     plateau->temps += estimerTempsPion(plateau, coup);
-    plateau->points += calculerPointsPion(dest);
+    plateau->points += calculerPointsPion(&dest);
 
-    return TRUE;
+    return true;
 }
 
-boolean jouerCoupTour(Etat *plateau, CoupTour *coup) {
-    Pos figure = coup->tour->figure, pion1 = coup->tour->pion1;
-    Pos pion2 = coup->tour->pion2, dest = coup->dest;
-    if (Etat_bougerFigure(plateau, figure, pion1) == FALSE) {
-        return FALSE;
+bool jouerCoupTour(Etat *plateau, CoupTour *coup) {
+    Pos figure = coup->tour.figure, pion1 = coup->tour.pion1;
+    Pos pion2 = coup->tour.pion2, dest = coup->dest;
+    if (Etat_detruireFigure(plateau, figure) == false) {
+        printf("FALSEFIGURE\n");
+        return false;
     }
-    if (Etat_bougerPion(plateau, pion1, pion2) == FALSE) {
-        return FALSE;
+    if (Etat_detruirePion(plateau, pion1) == false) {
+        printf("FALSEPION1\n");
+        return false;
     }
-    if (Etat_bougerFigure(plateau, figure, pion2) == FALSE) {
-        return FALSE;
+    if (Etat_detruirePion(plateau, pion2) == false) {
+        printf("FALSEPION2\n");
+        return true;
     }
-    if (Etat_bougerPion(plateau, pion1, dest) == FALSE) {
-        return FALSE;
+    /*
+    Pos figure = coup->tour.figure, pion1 = coup->tour.pion1;
+    Pos pion2 = coup->tour.pion2, dest = coup->dest;
+    if (Etat_bougerFigure(plateau, figure, dest) == false) {
+        printf("FALSEFIGURE\n");
+        return false;
     }
-    if (Etat_bougerFigure(plateau, figure, dest) == FALSE) {
-        return FALSE;
+    if (Etat_bougerPion(plateau, pion1, dest) == false) {
+        printf("FALSEPION1\n");
+        return false;
     }
-    if (Etat_bougerPion(plateau, pion2, dest) == FALSE) {
-        return FALSE;
-    }
+    if (Etat_bougerPion(plateau, pion2, dest) == false) {
+        printf("FALSEPION2\n");
+        return true;
+    }*/
+
     plateau->robotAmi = calculerRobot(pion2, dest);
     plateau->temps += estimerTempsTour(plateau, coup);
-    plateau->points += calculerPointsTour(dest);
+    plateau->points += calculerPointsTour(&dest);
 
-    return TRUE;
-}
-
-boolean coupValide(Etat *plateau, Coup *coup) {
-
+    return true;
 }
 
 /* float estimerTemps(Etat *plateau, Coup *coup) {
@@ -486,7 +659,7 @@ boolean coupValide(Etat *plateau, Coup *coup) {
 }*/
 
 float estimerTempsPion(Etat *plateau, CoupPion *coup) {
-    float vitesseMoy = 1; // vitesse moyenne
+    float vitesseMoy = VITESSE_MOY; // vitesse moyenne
     float distanceParcourue;
     Pos robot = plateau->robotAmi, pion, dest;
 
@@ -498,26 +671,230 @@ float estimerTempsPion(Etat *plateau, CoupPion *coup) {
 }
 
 float estimerTempsTour(Etat *plateau, CoupTour *coup) {
-    float vitesseMoy = 1; // vitesse moyenne
-    float tempsSup = 5; // temps supplémentaire : pour soulever la tour, la reposer, se tourner...
+    float vitesseMoy = VITESSE_MOY; // vitesse moyenne
+    float tempsSup = TEMPS_SUP; // temps supplémentaire : pour soulever la tour, la reposer, se tourner...
     float distanceParcourue;
     Pos robot = plateau->robotAmi, pion1, pion2, figure, dest;
 
-    pion1 = coup->tour->pion1;
-    pion2 = coup->tour->pion2;
-    figure = coup->tour->figure;
+    pion1 = coup->tour.pion1;
+    pion2 = coup->tour.pion2;
+    figure = coup->tour.figure;
     distanceParcourue = Pos_distance(robot, pion1) + Pos_distance(pion1, pion2)
-            + tempsSup
             + Pos_distance(pion2, figure) + Pos_distance(figure, dest);
 
 
-    return (distanceParcourue / vitesseMoy);
+    return (distanceParcourue / vitesseMoy + tempsSup);
 }
 
-float heuristique(Etat *plateau) {
-    return ((float)plateau->points / plateau->temps);
+float Etat_heuristique(Etat *plateau) {
+    return ((float) plateau->points / plateau->temps);
 }
 
-Tour deciderTour(Etat *plateau) {
+typedef struct Noeud_ {
+    Pos assemblage[4]; /* Contient la position initiale du robot,
+                        * puis des 3 pions ou figure à assembler */
+    int nbPieces; /* Taille-1 du tableau "assemblage"
+                   * Vaut 0, 1 (1 pion/figure choisi), 2 (2 pions/figure choisis) 
+                   * ou 3 (2 pions + 1 figure choisis = 1 tour) */
+    float cout; /* heuristique utilisée dans l'implémentation de A* */
+} Noeud;
+
+Noeud Noeud_init(Pos robot) { /* Constitue un noeud dansl'arbre de recherche de deciderTour */
+    Noeud n;
+    n.assemblage[0] = robot;
+    n.nbPieces = 0;
+    n.cout = 0;
+    return n;
+}
+
+Noeud Noeud_ajoutePiece(Noeud noeud, Pos piece) {
+    Noeud nouveauNoeud = noeud;
+    float coutSup = Pos_distance(noeud.assemblage[noeud.nbPieces], piece);
+    nouveauNoeud.nbPieces++;
+    nouveauNoeud.assemblage[nouveauNoeud.nbPieces] = piece;
+    nouveauNoeud.cout += coutSup;
+    return nouveauNoeud;
+}
+
+Noeud *Noeud_trouveSuccesseurs(Noeud n, Etat *plateau, int *nbSuccesseurs) {
+    int nbPieces = n.nbPieces;
+    int i, numSuccesseur = 0;
+    Noeud *successeurs;
+    if (nbPieces > 3) {
+        return 0;
+    }
+    if (nbPieces == 0) {
+        *nbSuccesseurs = plateau->nbFigures; // Il faut chercher une figure
+        successeurs = (Noeud *) malloc(sizeof(Noeud)*(*nbSuccesseurs));
+        for (i = 0; i < *nbSuccesseurs; i++) {
+            successeurs[i] = Noeud_ajoutePiece(n, plateau->figures[i]);
+        }
+    } else { // Il faut chercher un pion
+        *nbSuccesseurs = plateau->nbPions - (nbPieces - 1);
+        successeurs = (Noeud *) malloc(sizeof(Noeud) * (*nbSuccesseurs));
+
+        if (nbPieces >= 2) { // Il y a un pion qui a déjà été choisi, il ne faut pas l'ajouter
+            for (i = 0; i < plateau->nbPions; i++) {
+                if (Pos_egal(plateau->pions[i], n.assemblage[nbPieces])) {
+                    continue;
+                }
+                successeurs[numSuccesseur] = Noeud_ajoutePiece(n, plateau->pions[i]);
+                numSuccesseur++;
+            }
+            //assert(numSuccesseur == (*nbSuccesseurs));
+        } else { // Une figure a été choisie mais aucun pion : on ajoute tous les pions connus
+            for (i=0; i < *nbSuccesseurs; i++) {
+                successeurs[i] = Noeud_ajoutePiece(n, plateau->pions[i]);
+            }
+        }   
+    }
+    return successeurs;
+}
+
+typedef struct TasNoeud_ { // File de priorité implémentée en tas
+    Noeud noeuds[15 * 14 * 4]; /* Taille maximale de la pile
+                               * nbTourPossibles = 15pions*14pions*4figures */
+    int nbNoeuds; /* Nombre de noeuds actuel du tas */
+} TasNoeud;
+
+TasNoeud TasNoeud_init(Noeud nInit) {
+    TasNoeud tas;
+    tas.noeuds[0] = nInit;
+    tas.nbNoeuds = 1;
+    return tas;
+}
+
+#define GAUCHE(k)           (2*k)
+#define DROIT(k)            (2*k+1)
+#define PARENT(k)           (k/2)
+#define ESTVIDE(tas,k)      (k >= tas->nbNoeuds)
+#define ECHANGER(tas, i,j)  { Noeud x = tas->noeuds[i]; \
+                              tas->noeuds[i] = tas->noeuds[j]; \
+                              tas->noeuds[j] = x; }
+
+void TasNoeud_descendre(TasNoeud *tas, int k) {
+    int maxcout, droit, gauche;
+    gauche = GAUCHE(k);
+    droit = DROIT(k);
+    //if (!ESTVIDE(tas, k)) { // Condition de terminaison
+    if (!ESTVIDE(tas, gauche)) { // Condition de terminaison
+        maxcout = gauche;
+        if (!ESTVIDE(tas, droit)) {
+            if (tas->noeuds[droit].cout > tas->noeuds[maxcout].cout) {
+                maxcout = droit;
+            }
+        }
+        if (tas->noeuds[k].cout > tas->noeuds[maxcout].cout) { // Autre condition de terminaison
+            ECHANGER(tas, k, maxcout);
+            TasNoeud_descendre(tas, maxcout); // Continuer tant que le tas n'est pas ordonné
+        }
+    }
+}
+
+void TasNoeud_monter(TasNoeud *tas, int k) {
+    int mincout, parent;
+    if (k > 0) { // Condition de terminaison
+        parent = PARENT(k);
+        mincout = parent;
+        if (tas->noeuds[k].cout < tas->noeuds[mincout].cout) { // Autre condition de terminaison
+            ECHANGER(tas, k, mincout);
+            TasNoeud_monter(tas, mincout); // Continuer tant que le tas n'est pas ordonné
+        }
+    }
+}
+/*
+void TasNoeud_ajouter(TasNoeud *tas, Noeud n) {
+    assert(tas != NULL);
+    assert(tas->nbNoeuds <= 15 * 14 * 4);
+    // Incrémenter le nombre de noeuds et ajouter n en bas du tas
+    tas->noeuds[tas->nbNoeuds] = n;
+    tas->nbNoeuds++;
+    // Permuter le noeud ajouter avec les parents de pire coût
+    TasNoeud_monter(tas, tas->nbNoeuds-1);
+    //TasNoeud_monter(tas, tas->nbNoeuds);
+}*/
+
+void TasNoeud_ajouter(TasNoeud *tas, Noeud n) {
+    assert(tas != NULL);
+    assert(tas->nbNoeuds <= 15 * 14 * 4);
+    // Incrémenter le nombre de noeuds et ajouter n en bas du tas
+    tas->noeuds[tas->nbNoeuds] = n;
+    tas->nbNoeuds++;
+}
+
+/*
+Noeud TasNoeud_retirer(TasNoeud * tas) {
+    int nbNoeuds = tas->nbNoeuds;
+    Noeud racine;
+    assert(tas != NULL);
+    assert(nbNoeuds >= 1);
+    // Garder la racine (élément de moindre cout)
+    racine = tas->noeuds[0];
+    // Mettre le dernier élément comme racine
+    tas->noeuds[0] = tas->noeuds[nbNoeuds - 1];
+    // Décrémenter le nb de noeuds contenus dans tas
+    tas->nbNoeuds--;
+    // Permuter le noeud racine avec les fils de meilleur coût afin de réordonner le tas
+    TasNoeud_descendre(tas, 1);
+    return racine;
+}*/
+
+Noeud TasNoeud_retirer(TasNoeud * tas) {
+    int i, numMin, nbNoeuds = tas->nbNoeuds;
+    Noeud min;
+    assert(tas != NULL);
+    assert(nbNoeuds >= 1);
+
+    numMin = 0;
+    min = tas->noeuds[0];
+    for (i = 1; i < nbNoeuds; i++) {
+        if (tas->noeuds[i].cout < min.cout) {
+            numMin = i;
+            min = tas->noeuds[i];
+        }
+    }
     
+    for (i = numMin; i < nbNoeuds -1; i++) {
+        tas->noeuds[i] = tas->noeuds[i+1];
+    }
+
+    (tas->nbNoeuds)--;
+    return min;
 }
+
+Tour deciderTour(Etat *plateau) { /* Utilise l'algorithme de recherche coût uniforme */
+    Tour solution;
+
+    if (plateau->nbFigures == 0 || plateau->nbPions < 2) {
+        solution.figure.x = -1; // signe qu'aucune tour n'a pu être assemblée
+        return solution;
+    }
+
+    bool succes = false;
+    Noeud n = Noeud_init(plateau->robotAmi);
+    TasNoeud frontiere = TasNoeud_init(n);
+    int i;
+
+    while (succes == false) {
+        assert(frontiere.nbNoeuds != 0);
+
+        n = TasNoeud_retirer(&frontiere);
+        int nbPieces = n.nbPieces;
+        if (nbPieces == 3) {
+            succes = true;
+        } else {
+            int nbSuccesseurs;
+            Noeud *successeurs = Noeud_trouveSuccesseurs(n, plateau, &nbSuccesseurs);
+            for (i = 0; i < nbSuccesseurs; i++) {
+                TasNoeud_ajouter(&frontiere, successeurs[i]);
+            }
+            free(successeurs);
+        }
+    }
+
+    solution.figure = n.assemblage[1];
+    solution.pion1 = n.assemblage[2];
+    solution.pion2 = n.assemblage[3];
+    return solution;
+}
+
